@@ -4,11 +4,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
-    />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>Page Not Found - Chhoto URL</title>
     <meta property="og:title" content="Page Not Found - Chhoto URL" />
@@ -57,42 +54,64 @@
       href="admin/manage/assets/favicon-196.png"
       sizes="196x196"
     />
-  </head>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <style>
-    @import url("https://fonts.googleapis.com/css2?family=Montserrat&display=swap");
-    @font-face {
-      font-family: Montserrat, "Open Sans", Helvetica, Arial, sans-serif;
-      font-optical-sizing: auto;
-      font-weight: 400;
-      font-style: normal;
-      font-display: swap;
-    }
-    :root {
-      color-scheme: light dark;
-      font-family: Montserrat;
-    }
-    body {
-      color: light-dark(black, #e8e6e3);
-      background-color: light-dark(white, #181a1b);
-      text-align: center;
-    }
-    .poem {
-      display: inline-block;
-      text-align: left;
-    }
-    #quote {
-      text-indent: 4em;
-    }
-    /* Settings for mobile devices */
-    @media (pointer: none), (pointer: coarse) {
-      body {
-        text-align: left;
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cascadia+Code&family=Playfair+Display:ital,wght@0,800;1,400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: 'Cascadia Code', ui-monospace, Consolas, monospace;
+        font-size: 15px;
       }
-    }
-  </style>
+      body {
+        display: grid;
+        min-height: 100vh;
+        margin: 0;
+        padding: 1.25rem;
+        box-sizing: border-box;
+        place-content: center;
+        color: light-dark(#1b1a17, #ece6d9);
+        background-color: light-dark(#f7f3ea, #131210);
+      }
+      h1 {
+        margin: 0 0 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 3px double;
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 3rem;
+        font-weight: 800;
+        line-height: 1.1;
+        font-style: italic;
+      }
+      .poem {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 1.3rem;
+        font-style: italic;
+      }
+      .poem p {
+        margin: 0.3em 0;
+      }
+      #quote,
+      footer {
+        color: light-dark(#6b665b, #9a9385);
+        font-size: 0.8rem;
+      }
+      #quote {
+        margin: 1.25rem 0 0 4em;
+        font-family: 'Playfair Display', Georgia, serif;
+        font-style: italic;
+      }
+      footer {
+        margin-top: 3rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+    </style>
+  </head>
 
   <body>
     <h1>Error 404</h1>
@@ -100,8 +119,8 @@
       <p>You step in the stream,</p>
       <p>But the water has moved on.</p>
       <p>The page is not here.</p>
-      <p id="quote">— Cass Whittington</p>
     </div>
-    <p>[ Chhoto URL ]</p>
+    <p id="quote">— Cass Whittington</p>
+    <footer>[ Chhoto URL ]</footer>
   </body>
 </html>
