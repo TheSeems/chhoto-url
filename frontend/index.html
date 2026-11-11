@@ -5,11 +5,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
-    />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <title>Chhoto URL</title>
 
@@ -26,11 +22,11 @@
       property="og:image"
       content="https://chhoto.link/static/assets/banner.png"
     />
-
     <meta
       name="keywords"
       content="url shortener, link shortener, self hosted, open source"
     />
+
     <link
       rel="icon"
       type="image/x-icon"
@@ -51,449 +47,336 @@
       sizes="196x196"
     />
 
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cascadia+Code:wght@400;600&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="static/styles.css" />
+
+    <!-- Optional: without it QR codes are skipped -->
     <script
       src="https://cdn.jsdelivr.net/gh/sintan1729/qrcodejs@0.1.0/qrcode.min.js"
-      async
+      defer
     ></script>
     <script src="static/script.js" defer></script>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap"
-      rel="stylesheet"
-      crossorigin="anonymous"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/purecss@3.1.0/build/pure-min.css"
-      integrity="sha384-kj0X2NG2KHBie8Tq8fH1kxnyWM9XsXQpq7XdwbKmFKjwwaXGKBlB2Klu3VOltSFx"
-      crossorigin="anonymous"
-    />
-    <link
-      rel="stylesheet"
-      type="text/css"
-      target="_blank"
-      href="static/styles.css"
-    />
   </head>
 
   <body>
-    <div class="container" id="container">
-      <form class="pure-form pure-form-aligned" name="new-url-form">
-        <fieldset id="new-url-fieldset">
-          <legend id="logo">
-            <img src="assets/favicon.svg" alt="chhoto-url-logo" />
-            <span> Chhoto URL</span>
-          </legend>
-          <div class="pure-control-group">
-            <label for="longUrl">Long URL</label>
-            <input
-              class="chhoto-input"
-              type="url"
-              name="longUrl"
-              id="longUrl"
-              placeholder="Please enter a valid URL"
-              required
-            />
+    <svg class="sprite" width="0" height="0" aria-hidden="true">
+      <symbol id="i-copy" viewBox="0 0 24 24">
+        <rect x="9" y="9" width="11" height="11" rx="1.5" />
+        <path d="M15 5.5V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h.5" />
+      </symbol>
+      <symbol id="i-qr" viewBox="0 0 24 24">
+        <rect x="4" y="4" width="6" height="6" />
+        <rect x="14" y="4" width="6" height="6" />
+        <rect x="4" y="14" width="6" height="6" />
+        <path d="M14 14h2.5v2.5H14zM20 14v2M17.5 20H20v-1.5M14 20h1" />
+      </symbol>
+      <symbol id="i-info" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="8.5" />
+        <path d="M12 11v5.5M12 7.5v.5" />
+      </symbol>
+      <symbol id="i-edit" viewBox="0 0 24 24">
+        <path d="M4 20h4L19.5 8.5l-4-4L4 16zM13.5 6.5l4 4" />
+      </symbol>
+      <symbol id="i-trash" viewBox="0 0 24 24">
+        <path d="M4 7h16M9.5 7V4h5v3M6 7l1 13h10l1-13M10 11v5.5M14 11v5.5" />
+      </symbol>
+      <symbol id="i-prev" viewBox="0 0 24 24">
+        <path d="M14.5 5.5 8 12l6.5 6.5" />
+      </symbol>
+      <symbol id="i-next" viewBox="0 0 24 24">
+        <path d="M9.5 5.5 16 12l-6.5 6.5" />
+      </symbol>
+      <symbol id="i-close" viewBox="0 0 24 24">
+        <path d="M6 6l12 12M18 6 6 18" />
+      </symbol>
+      <symbol id="i-download" viewBox="0 0 24 24">
+        <path d="M12 4v11M7 10.5l5 5 5-5M5 20h14" />
+      </symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24">
+        <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" />
+        <circle cx="12" cy="12" r="3" />
+      </symbol>
+      <symbol id="i-eye-off" viewBox="0 0 24 24">
+        <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z" />
+        <circle cx="12" cy="12" r="3" />
+        <path d="M4 4l16 16" />
+      </symbol>
+      <symbol id="i-user" viewBox="0 0 24 24">
+        <circle cx="12" cy="8" r="4" />
+        <path d="M4 20.5c0-3.5 3.5-6 8-6s8 2.5 8 6" />
+      </symbol>
+      <!-- https://svgicons.com/icon/13641/bxl-github -->
+      <symbol id="i-github" viewBox="0 0 24 24">
+        <path
+          fill="currentColor"
+          stroke="none"
+          fill-rule="evenodd"
+          d="M12.026 2c-5.509 0-9.974 4.465-9.974 9.974c0 4.406 2.857 8.145 6.821 9.465c.499.09.679-.217.679-.481c0-.237-.008-.865-.011-1.696c-2.775.602-3.361-1.338-3.361-1.338c-.452-1.152-1.107-1.459-1.107-1.459c-.905-.619.069-.605.069-.605c1.002.07 1.527 1.028 1.527 1.028c.89 1.524 2.336 1.084 2.902.829c.091-.645.351-1.085.635-1.334c-2.214-.251-4.542-1.107-4.542-4.93c0-1.087.389-1.979 1.024-2.675c-.101-.253-.446-1.268.099-2.64c0 0 .837-.269 2.742 1.021a9.582 9.582 0 0 1 2.496-.336a9.554 9.554 0 0 1 2.496.336c1.906-1.291 2.742-1.021 2.742-1.021c.545 1.372.203 2.387.099 2.64c.64.696 1.024 1.587 1.024 2.675c0 3.833-2.33 4.675-4.552 4.922c.355.308.675.916.675 1.846c0 1.334-.012 2.41-.012 2.737c0 .267.178.577.687.479C19.146 20.115 22 16.379 22 11.974C22 6.465 17.535 2 12.026 2z"
+        />
+      </symbol>
+    </svg>
+
+    <header class="masthead">
+      <div id="logo">
+        <img src="assets/favicon.svg" alt="" />
+        <span> Chhoto URL</span>
+      </div>
+      <nav>
+        <button class="chip" id="auth-button" hidden>
+          <svg class="icon"><use href="#i-user" /></svg>
+          <span>login</span>
+        </button>
+        <a
+          class="chip"
+          id="version"
+          href="https://github.com/SinTan1729/chhoto-url"
+          target="_blank"
+          rel="noopener noreferrer"
+          hidden
+        >
+          <svg class="icon"><use href="#i-github" /></svg>
+          <span></span>
+        </a>
+      </nav>
+    </header>
+
+    <main>
+      <form id="new-form">
+        <div class="field">
+          <label for="long-url">Long URL</label>
+          <input
+            type="url"
+            name="longlink"
+            id="long-url"
+            placeholder="Please enter a valid URL"
+            required
+          />
+        </div>
+        <div class="field">
+          <label for="short-url">Short URL (optional)</label>
+          <input
+            type="text"
+            name="shortlink"
+            id="short-url"
+            placeholder="Only a-z, 0-9, - and _ are allowed"
+            pattern="[a-z0-9\-_]+"
+            title="Only a-z, 0-9, - and _ are allowed"
+            autocapitalize="off"
+          />
+        </div>
+        <details>
+          <summary>More options</summary>
+          <div id="options">
+            <div class="field">
+              <label for="expiry-delay">Expiry</label>
+              <select name="expiry_delay" id="expiry-delay">
+                <option value="0">Never</option>
+                <option value="600">10 Minutes</option>
+                <option value="1800">30 Minutes</option>
+                <option value="3600">1 Hour</option>
+                <option value="43200">12 Hours</option>
+                <option value="86400">1 Day</option>
+                <option value="604800">1 Week</option>
+                <option value="2592000">1 Month</option>
+                <option value="7776000">3 Months</option>
+                <option value="15552000">6 Months</option>
+                <option value="31536000">1 Year</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="notes">Notes</label>
+              <textarea
+                name="notes"
+                id="notes"
+                rows="2"
+                placeholder="Notes for the link, used for filtering"
+                title="Notes for the link"
+              ></textarea>
+            </div>
           </div>
-          <div class="pure-control-group">
-            <label for="shortUrl">Short URL (optional)</label>
-            <input
-              class="chhoto-input"
-              type="text"
-              name="shortUrl"
-              id="shortUrl"
-              placeholder="Only a-z, 0-9, - and _ are allowed"
-              pattern="[a-z0-9\-_]+"
-              title="Only a-z, 0-9, - and _ are allowed"
-              autocapitalize="off"
-            />
-          </div>
-          <div class="pure-form-section">
-            <details class="chhoto-input" id="optionsSection">
-              <summary class="pure-controls">More options</summary>
-              <div class="pure-control-group">
-                <label for="expiryDelay">Expiry</label>
-                <select
-                  class="chhoto-select"
-                  name="expiryDelay"
-                  id="expiryDelay"
-                >
-                  <option value="0">Never</option>
-                  <option value="600">10 Minutes</option>
-                  <option value="1800">30 Minutes</option>
-                  <option value="3600">1 Hour</option>
-                  <option value="43200">12 Hours</option>
-                  <option value="86400">1 Day</option>
-                  <option value="604800">1 Week</option>
-                  <option value="2592000">1 Month</option>
-                  <option value="7776000">3 Months</option>
-                  <option value="15552000">6 Months</option>
-                  <option value="31536000">1 Year</option>
-                </select>
-              </div>
-              <div class="pure-control-group">
-                <label for="notes">Notes</label>
-                <textarea
-                  class="chhoto-input"
-                  name="notes"
-                  id="notes"
-                  rows="2"
-                  placeholder="Notes for the link, used for filtering. All valid Unicode
-                  characters are allowed."
-                  title="Notes for the link"
-                ></textarea>
-              </div>
-            </details>
-          </div>
-          <div class="pure-controls" id="controls">
-            <button class="chhoto-button pure-button pure-button-primary">
-              Shorten!
-            </button>
-            <div id="alert-box">&nbsp;</div>
-          </div>
-        </fieldset>
+        </details>
+        <button class="button">Shorten!</button>
       </form>
 
-      <p id="loading-text">Loading links table...</p>
-      <table class="chhoto-table pure-table" id="table-box" hidden>
-        <caption>
-          <span name="label">Active links</span>
-          <span id="pageControls" hidden="true">
-            <button
-              id="prevPageBtn"
-              class="svg-button"
-              title="Previous Page"
-            ></button>
-            <button
-              id="nextPageBtn"
-              class="svg-button"
-              title="Next Page"
-            ></button>
+      <p id="status">Loading links...</p>
+
+      <section id="links" hidden>
+        <div id="links-head">
+          <h2>Active links</h2>
+          <span id="pager" hidden>
+            <button class="icon-button" id="prev-page" title="Previous page">
+              <svg class="icon"><use href="#i-prev" /></svg>
+            </button>
+            <span id="page-number">1</span>
+            <button class="icon-button" id="next-page" title="Next page">
+              <svg class="icon"><use href="#i-next" /></svg>
+            </button>
           </span>
-          <div id="filter-div">
-            <form class="pure-form" name="filter-form">
-              <fieldset>
-                <input
-                  class="chhoto-input"
-                  type="text"
-                  name="filter"
-                  id="filterText"
-                  placeholder="Filter shortlinks"
-                  pattern="(?:|[^\p{Cc}\p{Cs}\p{Co}\p{Cn}\u200B\uFEFF]{3,})"
-                  title="All valid Unicode characters are allowed, min length 3 chars"
-                  autocapitalize="off"
-                />
-                <button class="chhoto-button pure-button pure-button-primary">
-                  Filter
-                </button>
-              </fieldset>
-            </form>
-          </div>
-        </caption>
-        <br />
-        <thead>
-          <tr>
-            <th name="numColumn">#</th>
-            <th id="short-url-header">Short URL</th>
-            <th>Long URL</th>
-            <th name="hitsColumn">Hits</th>
-            <th name="expiryColumn">Expiry</th>
-            <th name="actions">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="url-table">
-          <!-- The links would be inserted here -->
-        </tbody>
-      </table>
-    </div>
-
-    <div name="links-div">
-      <button class="linkButton" id="admin-button" hidden>
-        <!-- https://svgicons.com/icon/109760/account -->
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-        >
-          <title>Account SVG Icon</title>
-          <g
-            fill="none"
-            stroke="currentColor"
-            stroke-dasharray="28"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-          >
-            <path
-              d="M4 21v-1c0 -3.31 2.69 -6 6 -6h4c3.31 0 6 2.69 6 6v1"
-            ></path>
-            <path
-              d="M12 11c-2.21 0 -4 -1.79 -4 -4c0 -2.21 1.79 -4 4 -4c2.21 0 4 1.79 4 4c0 2.21 -1.79 4 -4 4Z"
-            ></path>
-          </g>
-        </svg>
-        <span>login</span>
-      </button>
-      <!-- https://svgicons.com/icon/13641/bxl-github -->
-      <a
-        id="version-number"
-        class="linkButton"
-        href="https://github.com/SinTan1729/chhoto-url"
-        target="_blank"
-        rel="noopener noreferrer"
-        hidden
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-        >
-          <title>GitHub SVG Icon</title>
-          <path
-            fill-rule="evenodd"
-            clip-rule="evenodd"
-            d="M12.026 2c-5.509 0-9.974 4.465-9.974 9.974c0 4.406 2.857 8.145 6.821 9.465
-            c.499.09.679-.217.679-.481c0-.237-.008-.865-.011-1.696c-2.775.602-3.361-1.338-3.361-1.338
-            c-.452-1.152-1.107-1.459-1.107-1.459c-.905-.619.069-.605.069-.605c1.002.07 1.527 1.028 1.527 1.028
-            c.89 1.524 2.336 1.084 2.902.829c.091-.645.351-1.085.635-1.334c-2.214-.251-4.542-1.107-4.542-4.93
-            c0-1.087.389-1.979 1.024-2.675c-.101-.253-.446-1.268.099-2.64c0 0 .837-.269 2.742 1.021
-            a9.582 9.582 0 0 1 2.496-.336a9.554 9.554 0 0 1 2.496.336c1.906-1.291 2.742-1.021 2.742-1.021
-            c.545 1.372.203 2.387.099 2.64c.64.696 1.024 1.587 1.024 2.675c0 3.833-2.33 4.675-4.552 4.922
-            c.355.308.675.916.675 1.846c0 1.334-.012 2.41-.012 2.737c0 .267.178.577.687.479
-            C19.146 20.115 22 16.379 22 11.974C22 6.465 17.535 2 12.026 2z"
-            fill="currentColor"
-          />
-        </svg>
-        <span>Source Code</span>
-      </a>
-    </div>
-
-    <dialog id="login-dialog" closedby="none" class="chhoto-dialog">
-      <form class="pure-form" name="login-form">
-        <p>Login to Chhoto URL</p>
-        <div id="password-div">
-          <div>
+          <form id="filter-form">
             <input
-              class="chhoto-input"
+              type="text"
+              name="filter"
+              id="filter"
+              placeholder="Filter shortlinks"
+              pattern="(?:|[^\p{Cc}\p{Cs}\p{Co}\p{Cn}\u200B\uFEFF]{3,})"
+              title="All valid Unicode characters are allowed, min length 3 chars"
+              autocapitalize="off"
+            />
+            <button class="button outline">Filter</button>
+          </form>
+        </div>
+        <table id="links-table">
+          <thead>
+            <tr>
+              <th class="num">#</th>
+              <th class="short">Short URL</th>
+              <th>Long URL</th>
+              <th class="hits">Hits</th>
+              <th class="expiry">Expiry</th>
+              <th class="actions">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+        <p id="no-matches" hidden>No links match this filter.</p>
+      </section>
+    </main>
+
+    <template id="row-template">
+      <tr>
+        <td class="num" data-label="#"></td>
+        <td class="short" data-label="Short URL">
+          <a target="_blank" rel="noopener noreferrer"></a>
+        </td>
+        <td class="long" data-label="Long URL">
+          <a target="_blank" rel="noopener noreferrer"></a>
+        </td>
+        <td class="hits" data-label="Hits"></td>
+        <td class="expiry" data-label="Expiry"></td>
+        <td class="actions">
+          <button class="icon-button" data-action="copy" title="Copy short URL">
+            <svg class="icon"><use href="#i-copy" /></svg>
+          </button>
+          <button class="icon-button" data-action="qr" title="Show QR code">
+            <svg class="icon"><use href="#i-qr" /></svg>
+          </button>
+          <button class="icon-button" data-action="info" title="Show details">
+            <svg class="icon"><use href="#i-info" /></svg>
+          </button>
+          <button class="icon-button" data-action="edit" title="Edit">
+            <svg class="icon"><use href="#i-edit" /></svg>
+          </button>
+          <button class="icon-button" data-action="delete" title="Delete">
+            <svg class="icon"><use href="#i-trash" /></svg>
+          </button>
+        </td>
+      </tr>
+    </template>
+
+    <div id="toast" role="status" popover="manual"></div>
+
+    <dialog id="login-dialog">
+      <button class="icon-button dialog-close" id="login-close" title="Close">
+        <svg class="icon"><use href="#i-close" /></svg>
+      </button>
+      <form id="login-form">
+        <h2>Login to Chhoto URL</h2>
+        <div id="password-fields">
+          <div id="password-box">
+            <input
               type="password"
               id="password"
               placeholder="Password"
+              autocomplete="current-password"
             />
             <button
               type="button"
-              id="password-eye-button"
-              title="Toggle Password Visibility"
+              class="icon-button"
+              id="password-eye"
+              title="Toggle password visibility"
             >
-              &#x1F441;
+              <svg class="icon"><use href="#i-eye" /></svg>
             </button>
           </div>
-          <div>
-            <label for="login-checkbox">
-              <input type="checkbox" id="login-checkbox" />
-              Remember me
-            </label>
-          </div>
-          <button
-            class="chhoto-button pure-button pure-button-primary"
-            value="default"
-            id="password-login-button"
-          >
-            <!-- https://svgicons.com/icon/14727/log-in-circle -->
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-            >
-              <title>Login SVG Icon</title>
-              <path fill="currentColor" d="m10.998 16l5-4l-5-4v3h-9v2h9z" />
-              <path
-                fill="currentColor"
-                d="M12.999 2.999a8.938 8.938 0 0 0-6.364 2.637L8.049 7.05c1.322-1.322 3.08-2.051 4.95-2.051s3.628.729
-              4.95 2.051S20 10.13 20 12s-.729 3.628-2.051 4.95s-3.08 2.051-4.95 2.051s-3.628-.729-4.95-2.051l-1.414
-              1.414c1.699 1.7 3.959 2.637 6.364 2.637s4.665-.937 6.364-2.637C21.063 16.665 22 14.405 22
-              12s-.937-4.665-2.637-6.364a8.938 8.938 0 0 0-6.364-2.637"
-              />
-            </svg>
-            Login
-          </button>
-          <p id="wrong-pass" hidden>Wrong password!</p>
+          <label class="check">
+            <input type="checkbox" id="remember" />
+            Remember me
+          </label>
+          <button class="button">Login</button>
         </div>
-        <button
-          id="oidc-login-button"
-          class="chhoto-button pure-button pure-button-primary"
-          type="button"
-        >
-          <!-- https://svgicons.com/icon/148737/openid -->
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-          >
-            <title>OIDC Login Icon</title>
-            <path
-              fill="currentColor"
-              d="m14 2l-3 1.5v16.44C7 19.5 4 17.46 4 15c0-2.25 2.5-4.15 6-4.78V8.19c-5.14.69-9 3.47-9 6.81c0 3.56
-              4.36 6.5 10 6.94h.09L14 20.5zm1 6.19v2.03c1.15.21 2.18.55 3.06 1L16.5 12l6.5 1.5l-.5-4.5l-2 1C19
-              9.12 17.12 8.47 15 8.19"
-            />
-          </svg>
+        <button class="button outline" id="oidc-button" type="button">
           Login with OIDC
         </button>
+        <p class="error" id="login-error" hidden></p>
       </form>
     </dialog>
 
-    <dialog id="edit-dialog" class="chhoto-dialog">
-      <form class="pure-form pure-form-aligned" name="edit-form">
-        <p>
-          Enter new details for '<span id="edit-link">placeholder</span>'. Be
-          careful.
-        </p>
-        <fieldset id="edit-fieldset">
-          <div class="pure-control-group">
-            <label for="edited-url">Long URL</label>
-            <input class="chhoto-input" type="url" id="edited-url" />
-          </div>
-          <div class="pure-control-group">
-            <label for="edited-notes">Notes</label>
-            <textarea
-              class="chhoto-input"
-              type="text"
-              id="edited-notes"
-            ></textarea>
-          </div>
-          <div class="pure-control-group">
-            <label for="edited-expiry">Expiry</label>
-            <input
-              class="chhoto-input"
-              type="datetime-local"
-              step="1"
-              id="edited-expiry"
-            />
-          </div>
-          <div id="edit-checkboxes">
-            <label for="edit-reset-hits-checkbox">
-              <input type="checkbox" id="edit-reset-hits-checkbox" />
-              Reset hit count
-            </label>
-            <label for="edit-enabled-checkbox">
-              <input type="checkbox" id="edit-enabled-checkbox" />
-              Enabled
-            </label>
-          </div>
-          <div id="edit-buttons">
-            <button
-              class="chhoto-button pure-button pure-button-primary"
-              id="edit-cancel-button"
-              type="button"
-            >
-              Cancel
-            </button>
-            <button
-              class="chhoto-button pure-button pure-button-primary"
-              value="default"
-            >
-              Submit
-            </button>
-          </div>
-        </fieldset>
+    <dialog id="edit-dialog">
+      <form id="edit-form">
+        <h2>Edit '<span id="edit-slug"></span>'</h2>
+        <div class="field">
+          <label for="edit-url">Long URL</label>
+          <input type="url" id="edit-url" required />
+        </div>
+        <div class="field">
+          <label for="edit-notes">Notes</label>
+          <textarea id="edit-notes" rows="2"></textarea>
+        </div>
+        <div class="field">
+          <label for="edit-expiry">Expiry</label>
+          <input type="datetime-local" step="1" id="edit-expiry" />
+        </div>
+        <div class="checks">
+          <label class="check">
+            <input type="checkbox" id="edit-reset-hits" />
+            Reset hit count
+          </label>
+          <label class="check">
+            <input type="checkbox" id="edit-enabled" />
+            Enabled
+          </label>
+        </div>
+        <p class="error" id="edit-error" hidden></p>
+        <div class="dialog-buttons">
+          <button class="button outline" id="edit-cancel" type="button">
+            Cancel
+          </button>
+          <button class="button">Save</button>
+        </div>
       </form>
     </dialog>
 
-    <dialog id="info-dialog" closedby="any" class="chhoto-dialog">
-      <!-- https://svgicons.com/icon/13141/cross-filled -->
-      <button class="dialog-close-button" id="info-close-button">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-        >
-          <g fill="currentColor" fill-rule="evenodd" clip-rule="evenodd">
-            <path
-              d="M5.47 5.47a.75.75 0 0 1 1.06 0l12 12a.75.75 0 1 1-1.06 1.06l-12-12a.75.75 0 0 1 0-1.06"
-            />
-            <path
-              d="M18.53 5.47a.75.75 0 0 1 0 1.06l-12 12a.75.75 0 0 1-1.06-1.06l12-12a.75.75 0 0 1 1.06 0"
-            />
-          </g>
-        </svg>
+    <dialog id="info-dialog" closedby="any">
+      <button class="icon-button dialog-close" title="Close">
+        <svg class="icon"><use href="#i-close" /></svg>
       </button>
-      <div id="info-div">
-        <table class="pure-table" id="info-table">
-          <tbody>
-            <tr>
-              <td class="label">Short URL:</td>
-              <td id="info-short"></td>
-            </tr>
-            <tr>
-              <td class="label">Long URL:</td>
-              <td id="info-long"></td>
-            </tr>
-            <tr>
-              <td class="label">Hits:</td>
-              <td id="info-hits"></td>
-            </tr>
-            <tr>
-              <td class="label">Expiry:</td>
-              <td id="info-expiry"></td>
-            </tr>
-            <tr>
-              <td class="label">Enabled:</td>
-              <td id="info-enabled"></td>
-            </tr>
-            <tr>
-              <td class="label" id="info-notes-label">Notes:</td>
-              <td id="info-notes"></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <dl>
+        <dt>Short URL</dt>
+        <dd id="info-short"></dd>
+        <dt>Long URL</dt>
+        <dd><a id="info-long" target="_blank" rel="noopener noreferrer"></a></dd>
+        <dt>Hits</dt>
+        <dd id="info-hits"></dd>
+        <dt>Expiry</dt>
+        <dd id="info-expiry"></dd>
+        <dt>Enabled</dt>
+        <dd id="info-enabled"></dd>
+        <dt>Notes</dt>
+        <dd id="info-notes"></dd>
+      </dl>
     </dialog>
 
-    <dialog id="qr-code-dialog" closedby="any" class="chhoto-dialog">
-      <!-- https://svgicons.com/icon/10667/download-solid -->
-      <a class="dialog-close-button" id="qr-download-button" href="">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-        >
-          <path
-            fill="currentColor"
-            fill-rule="evenodd"
-            d="M5 16.25a.75.75 0 0 1 .75.75v2c0 .138.112.25.25.25h12a.25.25 0 0 0 .25-.25v-2a.75.75 0 0 1 1.5 0v2A1.75 1.75 0 0 1 18 20.75H6A1.75 1.75 0 0 1 4.25 19v-2a.75.75 0 0 1 .75-.75"
-            clip-rule="evenodd"
-          />
-          <path
-            fill="currentColor"
-            d="M10.738 3.75a.992.992 0 0 0-.988.906a36.618 36.618 0 0 0-.082 5.27c-.247.013-.493.03-.74.047l-1.49.109a.76.76 0 0 0-.585 1.167a15.555 15.555 0 0 0 4.032 4.258l.597.429a.888.888 0 0 0 1.036 0l.597-.429a15.556 15.556 0 0 0 4.032-4.258a.76.76 0 0 0-.585-1.167l-1.49-.109a42.274 42.274 0 0 0-.74-.047a36.62 36.62 0 0 0-.081-5.27a.992.992 0 0 0-.989-.906z"
-          />
-        </svg>
+    <dialog id="qr-dialog" closedby="any">
+      <a class="icon-button dialog-close" id="qr-download" title="Download">
+        <svg class="icon"><use href="#i-download" /></svg>
       </a>
-      <!-- https://svgicons.com/icon/13141/cross-filled -->
-      <button class="dialog-close-button" id="qr-close-button">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-        >
-          <g fill="currentColor" fill-rule="evenodd" clip-rule="evenodd">
-            <path
-              d="M5.47 5.47a.75.75 0 0 1 1.06 0l12 12a.75.75 0 1 1-1.06 1.06l-12-12a.75.75 0 0 1 0-1.06"
-            />
-            <path
-              d="M18.53 5.47a.75.75 0 0 1 0 1.06l-12 12a.75.75 0 0 1-1.06-1.06l12-12a.75.75 0 0 1 1.06 0"
-            />
-          </g>
-        </svg>
+      <button class="icon-button dialog-close" title="Close">
+        <svg class="icon"><use href="#i-close" /></svg>
       </button>
       <div id="qr-code"></div>
     </dialog>
