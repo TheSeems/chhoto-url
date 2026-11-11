@@ -4,6 +4,8 @@
 use actix_web::web;
 use chrono::{Local, Timelike};
 use log::{error, info, warn};
+use openidconnect::reqwest;
+use serde_json::json;
 use std::{collections::HashMap, sync::Arc};
 use tokio::{
     spawn,
@@ -12,7 +14,59 @@ use tokio::{
     time::{Duration, Instant, interval, sleep, sleep_until, timeout},
 };
 
-use crate::{AppState, database};
+use crate::{AppState, config::UmamiConfig, database};
+
+// Umami drops events whose user agent looks like a bot, so every hit is sent with this fixed one.
+// Nothing from the actual visitor is ever forwarded.
+const UMAMI_USER_AGENT: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
+
+// Send one anonymous pageview to Umami for every hit
+fn spawn_umami_worker(
+    umami: UmamiConfig,
+    mut umami_rx: mpsc::Receiver<String>,
+) -> tokio::task::JoinHandle<()> {
+    spawn({
+        async move {
+            let client = match reqwest::Client::builder()
+                .timeout(Duration::from_secs(5))
+                .user_agent(UMAMI_USER_AGENT)
+                .build()
+            {
+                Ok(client) => client,
+                Err(e) => {
+                    error!("Error building HTTP client for Umami, no hits will be sent: {e}");
+                    return;
+                }
+            };
+            while let Some(shortlink) = umami_rx.recv().await {
+                let mut payload = json!({
+                    "website": umami.website_id,
+                    "url": format!("/{shortlink}"),
+                });
+                if let Some(hostname) = &umami.hostname {
+                    payload["hostname"] = json!(hostname);
+                }
+                let body = json!({"type": "event", "payload": payload}).to_string();
+                match client
+                    .post(&umami.endpoint)
+                    .header("Content-Type", "application/json")
+                    .body(body)
+                    .send()
+                    .await
+                {
+                    Ok(res) if res.status().is_success() => {
+                        // Umami answers with this when it silently discards an event as a bot
+                        if res.text().await.is_ok_and(|t| t.contains("beep")) {
+                            warn!("Umami discarded the hit for {shortlink} as bot traffic.");
+                        }
+                    }
+                    Ok(res) => warn!("Umami rejected the hit for {shortlink}: {}", res.status()),
+                    Err(e) => warn!("Unable to send the hit for {shortlink} to Umami: {e}"),
+                }
+            }
+        }
+    })
+}
 
 pub(crate) enum HitUpdate {
     Hit(String),
@@ -27,14 +81,27 @@ pub(crate) fn spawn_hits_worker(
     spawn({
         async move {
             let mut pending = HashMap::new();
-            fn update_count(update: HitUpdate, pending: &mut HashMap<String, i64>) {
-                match update {
-                    HitUpdate::Hit(link) => *pending.entry(link).or_insert(0) += 1,
-                    HitUpdate::Reset(link) => {
-                        pending.remove(&link);
+            // Every hit that passes through here is also forwarded to Umami, if configured
+            let umami_tx = data.config.umami.clone().map(|umami| {
+                let (umami_tx, umami_rx) = mpsc::channel::<String>(1024);
+                spawn_umami_worker(umami, umami_rx);
+                umami_tx
+            });
+            let update_count = |update: HitUpdate, pending: &mut HashMap<String, i64>| match update
+            {
+                HitUpdate::Hit(link) => {
+                    // Never wait on Umami; the hit is dropped if its queue is full
+                    if let Some(umami_tx) = &umami_tx
+                        && let Err(err) = umami_tx.try_send(link.clone())
+                    {
+                        warn!("Dropped Umami hit for {link}: {err}");
                     }
+                    *pending.entry(link).or_insert(0) += 1;
                 }
-            }
+                HitUpdate::Reset(link) => {
+                    pending.remove(&link);
+                }
+            };
             loop {
                 let Some(first) = hits_rx.recv().await else {
                     break;

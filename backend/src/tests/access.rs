@@ -198,3 +198,87 @@ async fn link_disabling() {
     let resp = test::call_service(&app, req).await;
     assert!(resp.status().is_redirection());
 }
+
+// A hit is forwarded to Umami, and nothing from the visitor goes along with it
+#[test]
+async fn umami_hit_is_anonymous() {
+    use tokio::{
+        io::{AsyncReadExt, AsyncWriteExt},
+        net::TcpListener,
+        time::timeout,
+    };
+
+    let test = "umami-hit-is-anonymous";
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let port = listener.local_addr().unwrap().port();
+    let mut conf = default_config(test);
+    conf.umami = Some(crate::config::UmamiConfig {
+        endpoint: format!("http://127.0.0.1:{port}/api/send"),
+        website_id: String::from("site-id"),
+        hostname: Some(String::from("mydomain.com")),
+    });
+    let (_tempdir, app) = create_app(&conf, test).await;
+    let (status, _) = add_link(&app, &conf.api_key.unwrap(), "test1", 10, "").await;
+    assert!(status.is_success());
+
+    // A missing link must not produce an event; the first request received has to be for test1
+    let req = test::TestRequest::get().uri("/missing").to_request();
+    let _ = test::call_service(&app, req).await;
+    let req = test::TestRequest::get()
+        .uri("/test1")
+        .insert_header(("User-Agent", "VisitorAgent/1.0"))
+        .insert_header(("Referer", "https://referrer.example/page"))
+        .insert_header(("Accept-Language", "fr-FR"))
+        .insert_header(("X-Forwarded-For", "203.0.113.7"))
+        .to_request();
+    let resp = test::call_service(&app, req).await;
+    assert!(resp.status().is_redirection());
+
+    let received = timeout(Duration::from_secs(5), async {
+        let (mut stream, _) = listener.accept().await.unwrap();
+        let mut raw = Vec::new();
+        let mut buf = [0u8; 1024];
+        loop {
+            let n = stream.read(&mut buf).await.unwrap();
+            raw.extend_from_slice(&buf[..n]);
+            let text = String::from_utf8_lossy(&raw);
+            if let Some((head, body)) = text.split_once("\r\n\r\n") {
+                let length = head
+                    .lines()
+                    .find_map(|l| {
+                        l.to_ascii_lowercase()
+                            .strip_prefix("content-length:")?
+                            .trim()
+                            .parse::<usize>()
+                            .ok()
+                    })
+                    .unwrap();
+                if body.len() >= length {
+                    break;
+                }
+            }
+            assert!(n > 0, "Connection closed before the full request arrived.");
+        }
+        stream
+            .write_all(b"HTTP/1.1 200 OK\r\ncontent-length: 2\r\nconnection: close\r\n\r\n{}")
+            .await
+            .unwrap();
+        String::from_utf8(raw).unwrap()
+    })
+    .await
+    .expect("No request reached the fake Umami server.");
+
+    let (head, body) = received.split_once("\r\n\r\n").unwrap();
+    assert!(head.starts_with("POST /api/send "));
+    let body: serde_json::Value = serde_json::from_str(body).unwrap();
+    assert_eq!(
+        body,
+        serde_json::json!({
+            "type": "event",
+            "payload": {"website": "site-id", "url": "/test1", "hostname": "mydomain.com"},
+        })
+    );
+    for leaked in ["VisitorAgent", "referrer.example", "fr-FR", "203.0.113.7"] {
+        assert!(!received.contains(leaked), "Visitor data leaked: {leaked}");
+    }
+}

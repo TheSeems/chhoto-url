@@ -60,6 +60,12 @@ spec:
             - name: CHHOTO_CUSTOM_LANDING_DIRECTORY
               value: {{ .Values.custom_landing_directory }}
             {{- end }}
+            {{- if and .Values.umami_url .Values.umami_website_id }}
+            - name: CHHOTO_UMAMI_URL
+              value: {{ .Values.umami_url }}
+            - name: CHHOTO_UMAMI_WEBSITE_ID
+              value: {{ .Values.umami_website_id }}
+            {{- end }}
             {{- if .Values.cache_control_header }}
             - name: CHHOTO_CACHE_CONTROL_HEADER
               value: {{ .Values.cache_control_header }}

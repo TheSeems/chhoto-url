@@ -53,6 +53,8 @@ services:
       # - CHHOTO_CUSTOM_LANDING_DIRECTORY=/custom/dir/location
       # - CHHOTO_CACHE_CONTROL_HEADER=no-cache, private
       # - CHHOTO_FRONTEND_PAGE_SIZE=10
+      # - CHHOTO_UMAMI_URL=https://umami.example.com
+      # - CHHOTO_UMAMI_WEBSITE_ID=00000000-0000-0000-0000-000000000000
       # - CHHOTO_SESSION_MASTER_KEY=SECURE_MASTER_KEY
       # - CHHOTO_EXTRA_PROTOCOLS=ftps,obsidian
       # - CHHOTO_HEALTH_PORT=1729

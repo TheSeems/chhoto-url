@@ -89,6 +89,7 @@ pub(super) fn default_config(test: &str) -> config::Config {
         allow_capital_letters: false,
         custom_landing_directory: None,
         frontend_page_size: 10,
+        umami: None,
     }
 }
 
