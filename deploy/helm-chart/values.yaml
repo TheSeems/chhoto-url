@@ -30,6 +30,8 @@ allow_capital_letters: False
 use_wal_mode: True
 # ensure_acid: False
 frontend_page_size: 10
+# umami_url: "https://umami.example.com"
+# umami_website_id: "00000000-0000-0000-0000-000000000000"
 
 protocol: https
 fqdn: your.short.link.url.com

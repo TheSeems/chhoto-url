@@ -341,6 +341,21 @@ served through a proxy.
 This can be used to set the number of items shown per page in the frontend. This does not have any effect on the backend code.
 Defaults to 10.
 
+### `CHHOTO_UMAMI_URL` and `CHHOTO_UMAMI_WEBSITE_ID`
+
+Set both to send every hit to an [Umami](https://umami.is) instance as a pageview, e.g. `https://umami.example.com` and the
+website ID shown in Umami's website settings. The shortlink is used as the page path, and the host of `CHHOTO_SITE_URL` as the hostname.
+
+The events are anonymous. Nothing from the visitor (IP address, user agent, language, referrer) is forwarded; every hit is sent from
+the server with the same fixed user agent. So, the pageview counts per link are meaningful, but everything Umami derives from the
+visitor is not i.e. all hits show up as a single visitor, with the server's location and the same browser.
+
+Sending happens in the background and never delays a redirect. If Umami is unreachable, the affected hits are simply not sent to it.
+The hit counts in Chhoto URL itself are unaffected.
+
+_Note: Browsers cache permanent redirects, so repeat visits may never reach the server. Consider setting
+[`CHHOTO_REDIRECT_METHOD`](#chhoto_redirect_method) to `TEMPORARY` for more accurate counts._
+
 ### `CHHOTO_EXTRA_PROTOCOLS`
 
 Use this to allow extra protocols for longlinks. By default, only `http`, `https`, `ftp`, and `magnet` links are allowed. It should be a comma

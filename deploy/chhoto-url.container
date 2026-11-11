@@ -55,6 +55,8 @@ Environment=CHHOTO_TRY_LONGER_SLUG=True
 #Environment=CHHOTO_CACHE_CONTROL_HEADER=no-cache,private
 #Environment=CHHOTO_FRONTEND_PAGE_SIZE=10
 #Environment=CHHOTO_HEALTH_PORT=1729
+#Environment=CHHOTO_UMAMI_URL=https://umami.example.com
+#Environment=CHHOTO_UMAMI_WEBSITE_ID=00000000-0000-0000-0000-000000000000
 #Environment=TZ=America/Chicago
 
 # Volume

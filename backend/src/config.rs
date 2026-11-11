@@ -217,6 +217,14 @@ pub(crate) fn init_config() -> InitConfig {
     }
 }
 
+// Where anonymous hit events are sent, if Umami is configured
+#[derive(Clone)]
+pub(crate) struct UmamiConfig {
+    pub(crate) endpoint: String,
+    pub(crate) website_id: String,
+    pub(crate) hostname: Option<String>,
+}
+
 // Struct for storing config read form env vars that might be accessed more than once
 #[derive(Clone)]
 pub(crate) struct Config {
@@ -240,6 +248,7 @@ pub(crate) struct Config {
     pub(crate) oidc_client_secret: Option<String>,
     pub(crate) oidc_custom_claim: Option<(String, String)>,
     pub(crate) oidc_allowed_origins: HashSet<String>,
+    pub(crate) umami: Option<UmamiConfig>,
 }
 
 pub(crate) fn read() -> Config {
@@ -513,6 +522,40 @@ pub(crate) fn read() -> Config {
         .inspect(|s| info!("Frontend page size is set to {s}."))
         .unwrap_or(10);
 
+    let read_umami_var = |name: &str| {
+        var(name)
+            .ok()
+            .map(|s| remove_surrounding_quotes(s.trim()))
+            .map(|s| remove_trailing_slash(&s))
+            .filter(|s| !s.is_empty())
+    };
+    let umami = match (
+        read_umami_var("CHHOTO_UMAMI_URL"),
+        read_umami_var("CHHOTO_UMAMI_WEBSITE_ID"),
+    ) {
+        (Some(url), Some(website_id)) => {
+            if Url::parse(&url).is_ok_and(|u| ["http", "https"].contains(&u.scheme())) {
+                info!("Sending anonymous hit events to Umami at {url}.");
+                Some(UmamiConfig {
+                    endpoint: format!("{url}/api/send"),
+                    website_id,
+                    hostname: site_url
+                        .as_deref()
+                        .and_then(|u| Url::parse(u).ok())
+                        .and_then(|u| u.host_str().map(str::to_owned)),
+                })
+            } else {
+                warn!("Invalid Umami URL was provided. Ignoring the config.");
+                None
+            }
+        }
+        (None, None) => None,
+        _ => {
+            warn!("Both CHHOTO_UMAMI_URL and CHHOTO_UMAMI_WEBSITE_ID are needed for Umami.");
+            None
+        }
+    };
+
     Config {
         db_location,
         disable_frontend,
@@ -534,5 +577,6 @@ pub(crate) fn read() -> Config {
         oidc_client_secret,
         oidc_custom_claim,
         oidc_allowed_origins,
+        umami,
     }
 }
