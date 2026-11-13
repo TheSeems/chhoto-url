@@ -215,7 +215,7 @@ async fn umami_hit_is_anonymous() {
     conf.umami = Some(crate::config::UmamiConfig {
         endpoint: format!("http://127.0.0.1:{port}/api/send"),
         website_id: String::from("site-id"),
-        hostname: Some(String::from("mydomain.com")),
+        site_url: conf.site_url.clone(),
     });
     let (_tempdir, app) = create_app(&conf, test).await;
     let (status, _) = add_link(&app, &conf.api_key.unwrap(), "test1", 10, "").await;
@@ -281,4 +281,36 @@ async fn umami_hit_is_anonymous() {
     for leaked in ["VisitorAgent", "referrer.example", "fr-FR", "203.0.113.7"] {
         assert!(!received.contains(leaked), "Visitor data leaked: {leaked}");
     }
+}
+
+// Umami's page for a hit is the short link's public URL, CHHOTO_SITE_URL/<shortlink>
+#[test]
+async fn umami_page_follows_site_url() {
+    use crate::config::{UmamiConfig, UmamiPage};
+
+    let page = |site_url: Option<&str>| {
+        UmamiConfig {
+            endpoint: String::new(),
+            website_id: String::new(),
+            site_url: site_url.map(str::to_owned),
+        }
+        .page("abc")
+    };
+    let expected = |hostname: Option<&str>, path: &str| UmamiPage {
+        hostname: hostname.map(str::to_owned),
+        path: path.to_owned(),
+    };
+    assert_eq!(
+        page(Some("https://example.com")),
+        expected(Some("example.com"), "/abc")
+    );
+    assert_eq!(
+        page(Some("https://example.com/s")),
+        expected(Some("example.com"), "/s/abc")
+    );
+    assert_eq!(
+        page(Some("https://example.com/a/b/")),
+        expected(Some("example.com"), "/a/b/abc")
+    );
+    assert_eq!(page(None), expected(None, "/abc"));
 }

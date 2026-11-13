@@ -5,7 +5,7 @@ use actix_web::web;
 use chrono::{Local, Timelike};
 use log::{error, info, warn};
 use openidconnect::reqwest;
-use serde_json::json;
+use serde::Serialize;
 use std::{collections::HashMap, sync::Arc};
 use tokio::{
     spawn,
@@ -19,6 +19,21 @@ use crate::{AppState, config::UmamiConfig, database};
 // Umami drops events whose user agent looks like a bot, so every hit is sent with this fixed one.
 // Nothing from the actual visitor is ever forwarded.
 const UMAMI_USER_AGENT: &str = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
+
+// Body of Umami's /api/send
+#[derive(Serialize)]
+struct UmamiEvent<'a> {
+    #[serde(rename = "type")]
+    kind: &'static str,
+    payload: UmamiPayload<'a>,
+}
+#[derive(Serialize)]
+struct UmamiPayload<'a> {
+    website: &'a str,
+    url: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    hostname: Option<String>,
+}
 
 // Send one anonymous pageview to Umami for every hit
 fn spawn_umami_worker(
@@ -39,14 +54,22 @@ fn spawn_umami_worker(
                 }
             };
             while let Some(shortlink) = umami_rx.recv().await {
-                let mut payload = json!({
-                    "website": umami.website_id,
-                    "url": format!("/{shortlink}"),
-                });
-                if let Some(hostname) = &umami.hostname {
-                    payload["hostname"] = json!(hostname);
-                }
-                let body = json!({"type": "event", "payload": payload}).to_string();
+                let page = umami.page(&shortlink);
+                let event = UmamiEvent {
+                    kind: "event",
+                    payload: UmamiPayload {
+                        website: &umami.website_id,
+                        url: page.path,
+                        hostname: page.hostname,
+                    },
+                };
+                let body = match serde_json::to_string(&event) {
+                    Ok(body) => body,
+                    Err(e) => {
+                        warn!("Unable to encode the Umami event for {shortlink}: {e}");
+                        continue;
+                    }
+                };
                 match client
                     .post(&umami.endpoint)
                     .header("Content-Type", "application/json")

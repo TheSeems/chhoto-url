@@ -222,7 +222,32 @@ pub(crate) fn init_config() -> InitConfig {
 pub(crate) struct UmamiConfig {
     pub(crate) endpoint: String,
     pub(crate) website_id: String,
+    pub(crate) site_url: Option<String>,
+}
+// A page as Umami records it
+#[derive(Debug, PartialEq)]
+pub(crate) struct UmamiPage {
     pub(crate) hostname: Option<String>,
+    pub(crate) path: String,
+}
+impl UmamiConfig {
+    // The page a hit is recorded as: the short link's public URL, i.e. CHHOTO_SITE_URL/<shortlink> (what the API
+    // returns for new links), split into Umami's hostname and path. Without a site URL, only the path is known.
+    pub(crate) fn page(&self, shortlink: &str) -> UmamiPage {
+        self.site_url
+            .as_deref()
+            .and_then(|site| {
+                Url::parse(&format!("{}/{shortlink}", site.trim_end_matches('/'))).ok()
+            })
+            .map(|url| UmamiPage {
+                hostname: url.host_str().map(str::to_owned),
+                path: url.path().to_owned(),
+            })
+            .unwrap_or_else(|| UmamiPage {
+                hostname: None,
+                path: format!("/{shortlink}"),
+            })
+    }
 }
 
 // Struct for storing config read form env vars that might be accessed more than once
@@ -539,10 +564,7 @@ pub(crate) fn read() -> Config {
                 Some(UmamiConfig {
                     endpoint: format!("{url}/api/send"),
                     website_id,
-                    hostname: site_url
-                        .as_deref()
-                        .and_then(|u| Url::parse(u).ok())
-                        .and_then(|u| u.host_str().map(str::to_owned)),
+                    site_url: site_url.clone(),
                 })
             } else {
                 warn!("Invalid Umami URL was provided. Ignoring the config.");

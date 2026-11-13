@@ -344,7 +344,7 @@ Defaults to 10.
 ### `CHHOTO_UMAMI_URL` and `CHHOTO_UMAMI_WEBSITE_ID`
 
 Set both to send every hit to an [Umami](https://umami.is) instance as a pageview, e.g. `https://umami.example.com` and the
-website ID shown in Umami's website settings. The shortlink is used as the page path, and the host of `CHHOTO_SITE_URL` as the hostname.
+website ID shown in Umami's website settings. Each hit is recorded at the short link's public URL, `CHHOTO_SITE_URL/<shortlink>` (e.g. host `example.com`, path `/s/abc` for `https://example.com/s`).
 
 The events are anonymous. Nothing from the visitor (IP address, user agent, language, referrer) is forwarded; every hit is sent from
 the server with the same fixed user agent. So, the pageview counts per link are meaningful, but everything Umami derives from the
