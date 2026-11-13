@@ -70,8 +70,7 @@ impl UmamiConfig {
         }
     }
 
-    // The page a hit is recorded as: the short link's public URL, i.e. CHHOTO_SITE_URL/<shortlink> (what the API
-    // returns for new links), split into Umami's hostname and path. Without a site URL, only the path is known.
+    // The hit's page in Umami: the public link CHHOTO_SITE_URL/<shortlink>, or just /<shortlink> without a site URL
     pub(crate) fn page(&self, shortlink: &str) -> UmamiPage {
         self.site_url
             .as_deref()
