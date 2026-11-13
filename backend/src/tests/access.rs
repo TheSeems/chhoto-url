@@ -212,7 +212,7 @@ async fn umami_hit_is_anonymous() {
     let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
     let port = listener.local_addr().unwrap().port();
     let mut conf = default_config(test);
-    conf.umami = Some(crate::config::UmamiConfig {
+    conf.umami = Some(crate::umami::UmamiConfig {
         endpoint: format!("http://127.0.0.1:{port}/api/send"),
         website_id: String::from("site-id"),
         site_url: conf.site_url.clone(),
@@ -286,7 +286,7 @@ async fn umami_hit_is_anonymous() {
 // Umami's page for a hit is the short link's public URL, CHHOTO_SITE_URL/<shortlink>
 #[test]
 async fn umami_page_follows_site_url() {
-    use crate::config::{UmamiConfig, UmamiPage};
+    use crate::umami::{UmamiConfig, UmamiPage};
 
     let page = |site_url: Option<&str>| {
         UmamiConfig {
