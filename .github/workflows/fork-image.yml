@@ -1,0 +1,46 @@
+# Fork only: builds the image that the homelab cluster runs (apps/links in TheSeems/internal-infra).
+# Upstream's release workflow publishes to sintan1729's registries, so it can't be used from here.
+name: Fork image
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'deploy/Containerfile'
+      - '.github/workflows/fork-image.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  image:
+    if: github.repository == 'TheSeems/chhoto-url'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Compute tag
+        id: vars
+        run: echo "tag=main-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+      # The cluster's master, where the links app is pinned, is amd64
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: deploy/Containerfile
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/theseems/chhoto-url:${{ steps.vars.outputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
