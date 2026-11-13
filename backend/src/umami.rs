@@ -6,7 +6,13 @@
 use log::{error, info, warn};
 use openidconnect::reqwest;
 use serde::Serialize;
-use std::env::var;
+use std::{
+    env::var,
+    sync::{
+        Arc,
+        atomic::{AtomicU64, Ordering::Relaxed},
+    },
+};
 use tokio::{spawn, sync::mpsc, time::Duration};
 use url::Url;
 
@@ -98,27 +104,32 @@ struct Payload<'a> {
     hostname: Option<String>,
 }
 
-// Sends hits to Umami from a task of its own, so a slow or unreachable Umami never holds up the caller
+// Sends hits to Umami from a task of its own, so a slow or unreachable Umami never holds up the caller.
+// Lost hits are counted rather than logged one by one: a warning when they start, a summary once Umami is back.
 pub(crate) struct Reporter {
     tx: mpsc::Sender<String>,
+    lost: Arc<AtomicU64>,
 }
 
 impl Reporter {
     pub(crate) fn spawn(config: UmamiConfig) -> Self {
         let (tx, rx) = mpsc::channel(QUEUE_SIZE);
-        spawn(run(config, rx));
-        Self { tx }
+        let lost = Arc::new(AtomicU64::new(0));
+        spawn(run(config, rx, lost.clone()));
+        Self { tx, lost }
     }
 
     // Never waits; the hit is dropped if the queue is full
     pub(crate) fn hit(&self, shortlink: &str) {
-        if let Err(err) = self.tx.try_send(shortlink.to_owned()) {
-            warn!("Dropped Umami hit for {shortlink}: {err}");
+        if self.tx.try_send(shortlink.to_owned()).is_err() && self.lost.fetch_add(1, Relaxed) == 0 {
+            warn!(
+                "Umami queue is full, dropping hits. Further failures won't be logged until Umami is back."
+            );
         }
     }
 }
 
-async fn run(config: UmamiConfig, mut rx: mpsc::Receiver<String>) {
+async fn run(config: UmamiConfig, mut rx: mpsc::Receiver<String>, lost: Arc<AtomicU64>) {
     let client = match reqwest::Client::builder()
         .timeout(Duration::from_secs(5))
         .user_agent(USER_AGENT)
@@ -131,11 +142,27 @@ async fn run(config: UmamiConfig, mut rx: mpsc::Receiver<String>) {
         }
     };
     while let Some(shortlink) = rx.recv().await {
-        send(&client, &config, &shortlink).await;
+        match send(&client, &config, &shortlink).await {
+            Ok(()) => {
+                let count = lost.swap(0, Relaxed);
+                if count > 0 {
+                    info!("Umami is back; {count} hits weren't recorded there.");
+                }
+            }
+            Err(e) => {
+                if lost.fetch_add(1, Relaxed) == 0 {
+                    warn!("{e}. Further failures won't be logged until Umami is back.");
+                }
+            }
+        }
     }
 }
 
-async fn send(client: &reqwest::Client, config: &UmamiConfig, shortlink: &str) {
+async fn send(
+    client: &reqwest::Client,
+    config: &UmamiConfig,
+    shortlink: &str,
+) -> Result<(), String> {
     let page = config.page(shortlink);
     let event = Event {
         kind: "event",
@@ -145,27 +172,26 @@ async fn send(client: &reqwest::Client, config: &UmamiConfig, shortlink: &str) {
             hostname: page.hostname,
         },
     };
-    let body = match serde_json::to_string(&event) {
-        Ok(body) => body,
-        Err(e) => {
-            warn!("Unable to encode the Umami event for {shortlink}: {e}");
-            return;
-        }
-    };
-    match client
+    let body = serde_json::to_string(&event)
+        .map_err(|e| format!("Unable to encode the Umami event for {shortlink}: {e}"))?;
+    let res = client
         .post(&config.endpoint)
         .header("Content-Type", "application/json")
         .body(body)
         .send()
         .await
-    {
-        Ok(res) if res.status().is_success() => {
-            // Umami answers with this when it silently discards an event as a bot
-            if res.text().await.is_ok_and(|t| t.contains("beep")) {
-                warn!("Umami discarded the hit for {shortlink} as bot traffic.");
-            }
-        }
-        Ok(res) => warn!("Umami rejected the hit for {shortlink}: {}", res.status()),
-        Err(e) => warn!("Unable to send the hit for {shortlink} to Umami: {e}"),
+        .map_err(|e| format!("Unable to send the hit for {shortlink} to Umami: {e}"))?;
+    if !res.status().is_success() {
+        return Err(format!(
+            "Umami rejected the hit for {shortlink}: {}",
+            res.status()
+        ));
     }
+    // Umami answers with this when it silently discards an event as a bot
+    if res.text().await.is_ok_and(|t| t.contains("beep")) {
+        return Err(format!(
+            "Umami discarded the hit for {shortlink} as bot traffic"
+        ));
+    }
+    Ok(())
 }
