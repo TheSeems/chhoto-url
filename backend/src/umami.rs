@@ -103,8 +103,8 @@ struct Payload<'a> {
     hostname: Option<String>,
 }
 
-// Sends hits to Umami from a task of its own, so a slow or unreachable Umami never holds up the caller.
-// Lost hits are counted rather than logged one by one: a warning when they start, a summary once Umami is back.
+// Sends hits from its own task, so Umami never holds up the hit counter.
+// Lost hits: one warning when they start, a count once Umami is back.
 pub(crate) struct Reporter {
     tx: mpsc::Sender<String>,
     lost: Arc<AtomicU64>,
