@@ -33,6 +33,7 @@ mod database;
 mod logging;
 mod oidc;
 mod services;
+mod umami;
 mod utils;
 
 // Tests
